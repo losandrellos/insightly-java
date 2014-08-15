@@ -108,6 +108,15 @@ public class Insightly{
         }
     }
 
+    public JSONArray getCountries() throws IOException{
+        try{
+            return verifyResponse(generateRequest("/v2.1/Countries", "GET", "").asJson()).getBody().getArray();
+        }
+        catch(UnirestException ex){
+            throw new IOException(ex.getMessage());
+        }
+    }
+
     public JSONArray getCurrencies() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Currencies", "GET", "").asJson()).getBody().getArray();
@@ -300,6 +309,17 @@ public class Insightly{
         catch(Exception ex){
             contact = null;
             System.out.println("FAIL: addContact()");
+            failed += 1;
+        }
+
+        // Test getCountries()
+        try{
+            JSONArray countries = this.getCountries();
+            System.out.println("PASS: getCountries(), found " + countries.length() + " countries.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getCountries");
             failed += 1;
         }
 
