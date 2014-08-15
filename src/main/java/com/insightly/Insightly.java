@@ -146,7 +146,7 @@ public class Insightly{
     }
 
     public JSONObject getEvent(long id) throws IOException{
-        return InsightlyRequest.GET(apikey, "/v2.1/Events/" + id);
+        return InsightlyRequest.GET(apikey, "/v2.1/Events/" + id).asJSONObject();
     }
 
     public JSONArray getEvents() throws IOException{
@@ -176,6 +176,30 @@ public class Insightly{
 
     public void deleteEvent(long id) throws IOException{
         InsightlyRequest.DELETE(apikey, "/v2.1/Events/" + id).asString();
+    }
+
+    public JSONArray getFileCategories() throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/FileCategories").asJSONArray();
+    }
+
+    public JSONObject getFileCategory(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/FileCategories/" + id).asJSONObject();
+    }
+
+    public JSONObject addFileCategory(JSONObject category) throws IOException{
+        InsightlyRequest request = null;
+        if(category.has("CATEGORY_ID") && (category.getLong("CATEGORY_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, "/v2.1/FileCategories");
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, "/v2.1/FileCategories");
+        }
+
+        return request.body(category).asJSONObject();
+    }
+
+    public void deleteFileCategory(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/FileCategories/" + id);
     }
 
     public JSONArray getUsers() throws IOException{
@@ -530,6 +554,47 @@ public class Insightly{
                 System.out.println("FAIL: deleteEvent()");
                 failed += 1;
             }
+        }
+
+        // Test getFileCategories()
+        try{
+            JSONArray categories = this.getFileCategories();
+            System.out.println("PASS: getFileCategories(), found " + categories.length() + " file categories.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getFileCategories()");
+            failed += 1;
+        }
+
+        // Test addFileCategory()
+        JSONObject category = null;
+        try{
+            category = new JSONObject();
+            category.put("CATEGORY_NAME", "Test Category");
+            category.put("ACTIVE", true);
+            category.put("BACKGROUND_COLOR", "000000");
+            category = this.addFileCategory(category);
+            System.out.println("PASS: addFileCategory()");
+            passed += 1;
+        }
+        catch(Exception ex){
+            category = null;
+            System.out.println("FAIL: addFileCategory()");
+            failed += 1;
+        }
+
+        // Test deleteFileCategory()
+        try{
+            if(category != null){
+                this.deleteFileCategory(category.getLong("CATEGORY_ID"));
+                System.out.println("PASS deleteFileCategory()");
+                passed += 1;
+            }
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: deleteFileCategory()");
+            failed += 1;
         }
 
         if(failed != 0){
