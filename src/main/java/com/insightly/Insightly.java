@@ -145,6 +145,39 @@ public class Insightly{
         }
     }
 
+    public JSONObject getEvent(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Events/" + id);
+    }
+
+    public JSONArray getEvents() throws IOException{
+        return getEvents(null);
+    }
+
+    public JSONArray getEvents(Map<String, Object> options) throws IOException{
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Events");
+        if(options != null){
+            buildODataQuery(request, options);
+        }
+        return request.asJSONArray();
+    }
+
+    public JSONObject addEvent(JSONObject event) throws IOException{
+        InsightlyRequest request = null;
+        if(event.has("EVENT_ID") && (event.getLong("EVENT_ID") > 0)){
+            long event_id = event.getLong("EVENT_ID");
+            request = InsightlyRequest.PUT(apikey, "/v2.1/Events");
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, "/v2.1/Events");
+        }
+
+        return request.body(event).asJSONObject();
+    }
+
+    public void deleteEvent(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Events/" + id).asString();
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -152,6 +185,31 @@ public class Insightly{
         catch(UnirestException ex){
             throw new IOException(ex.getMessage());
         }
+    }
+
+    private InsightlyRequest buildODataQuery(InsightlyRequest request, Map<String, Object> options){
+        if(options.containsKey("top") && (options.get("top") != null)){
+            long top = ((Number)options.get("top")).longValue();
+            if(top > 0){
+                request.top(top);
+            }
+        }
+        if(options.containsKey("skip") && (options.get("skip") != null)){
+            long skip = ((Number)options.get("skip")).longValue();
+            if(skip > 0){
+                request.skip(skip);
+            }
+        }
+        if(options.containsKey("orderby") && (options.get("orderby") != null)){
+            String orderby = (String)options.get("orderby");
+            request.orderBy(orderby);
+        }
+        if(options.containsKey("filters") && (options.get("filters") != null)){
+            List<String> filters = (List<String>)options.get("filters");
+            request.filter(filters);
+        }
+
+        return request;
     }
 
     protected List<String> buildODataQuery(Map<String, Object> options){
@@ -421,9 +479,58 @@ public class Insightly{
         }
         catch(Exception ex){
             System.out.println("FAIL: getEmails()");
+            failed += 1;
         }
 
         // TODO:  Test getEmail()
+
+        // Test getEvents()
+        try{
+            options = new HashMap<String, Object>();
+            options.put("top", top);
+            JSONArray events = this.getEvents(options);
+            System.out.println("PASS: getEvents(), found " + events.length() + " events.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getEvents()");
+            failed += 1;
+        }
+
+        // Test addEvent()
+        JSONObject event = null;
+        try{
+            JSONObject new_event = new JSONObject();
+            new_event.put("TITLE", "Text Event");
+            new_event.put("LOCATION", "Somewhere");
+            new_event.put("DETAILS", "Details");
+            new_event.put("START_DATE_UTC", "2014-07-12 12:00:00");
+            new_event.put("END_DATE_UTC", "2014-07-12 13:00:00");
+            new_event.put("OWNER_USER_ID", user_id);
+            new_event.put("ALL_DAY", false);
+            new_event.put("PUBLICLY_VISIBLE", true);
+            event = this.addEvent(new_event);
+            System.out.println("PASS: addEvent()");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: addEvent()");
+            ex.printStackTrace();
+            failed += 1;
+        }
+
+        // Test deleteEvent()
+        if(event != null){
+            try{
+                this.deleteEvent(event.getLong("EVENT_ID"));
+                System.out.println("PASS: deleteEvent()");
+                passed += 1;
+            }
+            catch(Exception ex){
+                System.out.println("FAIL: deleteEvent()");
+                failed += 1;
+            }
+        }
 
         if(failed != 0){
             throw new Exception(failed + " tests failed!");
