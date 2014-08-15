@@ -135,6 +135,16 @@ public class Insightly{
         }
     }
 
+    public JSONArray getEmails(Map<String, Object> options) throws IOException{
+        try{
+            String query_string = buildQueryString(buildODataQuery(options));
+            return verifyResponse(generateRequest("/v2.1/Emails" + query_string, "GET", "").asJson()).getBody().getArray();
+        }
+        catch(UnirestException ex){
+            throw new IOException(ex.getMessage());
+        }
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -142,6 +152,53 @@ public class Insightly{
         catch(UnirestException ex){
             throw new IOException(ex.getMessage());
         }
+    }
+
+    protected List<String> buildODataQuery(Map<String, Object> options){
+        List<String> query_strings = new ArrayList<String>();
+        if(options.containsKey("top") && (options.get("top") != null)){
+            long top = ((Number)options.get("top")).longValue();
+            if(top > 0){
+                query_strings.add("$top=" + top);
+            }
+        }
+        if(options.containsKey("skip") && (options.get("skip") != null)){
+            long skip = ((Number)options.get("skip")).longValue();
+            if(skip > 0){
+                query_strings.add("$skip=" + skip);
+            }
+        }
+        if(options.containsKey("orderby") && (options.get("orderby") != null)){
+            String orderby = (String)options.get("orderby");
+            // TODO:  encode orderby
+            query_strings.add("$orderby=" + orderby);
+        }
+        if(options.containsKey("filters") && (options.get("filters") != null)){
+            List<String> filters = (List<String>)options.get("filters");
+            for(String f : filters){
+                // TODO: encode f
+                query_strings.add("$filter=" + f);
+            }
+        }
+
+        return query_strings;
+    }
+
+    protected String buildQueryString(List<String> query_strings){
+        StringBuilder query_string = new StringBuilder();
+        if(query_strings.size() > 0){
+            boolean first = true;
+            for(String s : query_strings){
+                if(!first){
+                    query_string.append("&");
+                    first = false;
+                }
+
+                query_string.append(s);
+            }
+        }
+
+        return query_string.toString();
     }
 
     public HttpRequest generateRequest(String url, String method, String data) throws IOException{
@@ -353,6 +410,20 @@ public class Insightly{
             System.out.println("FAIL: getCustomFields()");
             failed += 1;
         }
+
+        // Test getEmails()
+        try{
+            options = new HashMap<String, Object>();
+            options.put("top", top);
+            JSONArray emails = this.getEmails(options);
+            System.out.println("PASS: getEmails(), found " + emails.length() + " emails.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getEmails()");
+        }
+
+        // TODO:  Test getEmail()
 
         if(failed != 0){
             throw new Exception(failed + " tests failed!");
