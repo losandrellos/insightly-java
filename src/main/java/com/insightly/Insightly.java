@@ -126,6 +126,15 @@ public class Insightly{
         }
     }
 
+    public JSONArray getCustomFields() throws IOException{
+        try{
+            return verifyResponse(generateRequest("/v2.1/CustomFields", "GET", "").asJson()).getBody().getArray();
+        }
+        catch(UnirestException ex){
+            throw new IOException(ex.getMessage());
+        }
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -331,6 +340,17 @@ public class Insightly{
         }
         catch(Exception ex){
             System.out.println("FAIL: getCurrencies()");
+            failed += 1;
+        }
+
+        // Test getCustomFields()
+        try{
+            JSONArray custom_fields = this.getCustomFields();
+            System.out.println("PASS: getCustomFields(), found " + custom_fields.length() + " custom fields.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getCustomFields()");
             failed += 1;
         }
 
