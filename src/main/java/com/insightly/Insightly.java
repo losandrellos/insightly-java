@@ -20,6 +20,29 @@ public class Insightly{
         this.apikey = apikey;
     }
 
+    public JSONObject addContact(JSONObject contact) throws IOException{
+        try{
+            if(contact.has("CONTACT_ID") && (contact.getLong("CONTACT_ID") > 0)){
+                return verifyResponse(generateRequest("/v2.1/Contacts", "PUT", contact.toString()).asJson()).getBody().getObject();
+            }
+            else{
+                return verifyResponse(generateRequest("/v2.1/Contacts", "POST", contact.toString()).asJson()).getBody().getObject();
+            }
+        }
+        catch(UnirestException ex){
+            throw new IOException(ex.getMessage());
+        }
+    }
+
+    public void deleteContact(long contact_id) throws IOException{
+        try{
+            verifyResponse(generateRequest("/v2.1/Contacts/" + contact_id, "DELETE", "").asJson());
+        }
+        catch(UnirestException ex){
+            throw new IOException(ex.getMessage());
+        }
+    }
+
     public JSONArray getContacts(Map<String, Object> options) throws IOException{
         try{
             List<String> query_strings = new ArrayList<String>();
@@ -142,7 +165,10 @@ public class Insightly{
     }
 
     protected <T> HttpResponse<T> verifyResponse(HttpResponse<T> response) throws IOException{
-        if(response.getCode() != 200){
+        int status_code = response.getCode();
+        if(!(status_code == 200
+             || status_code == 201
+             || status_code == 202)){
             throw new IOException("Server returned status code " + response.getCode());
         }
 
@@ -248,6 +274,33 @@ public class Insightly{
                 System.out.println("FAIL: getContactTasks()");
                 failed += 1;
             }
+        }
+
+        // Test addContact
+        try{
+            contact = new JSONObject();
+            contact.put("SALUTATION", "Mr");
+            contact.put("FIRST_NAME", "Testy");
+            contact.put("LAST_NAME", "McTesterson");
+
+            contact = this.addContact(contact);
+            System.out.println("PASS: addContact()");
+            passed += 1;
+
+            try{
+                this.deleteContact(contact.getLong("CONTACT_ID"));
+                System.out.println("PASS: deleteContact()");
+                passed += 1;
+            }
+            catch(Exception ex){
+                System.out.println("FAIL: deleteContact()");
+                failed += 1;
+            }
+        }
+        catch(Exception ex){
+            contact = null;
+            System.out.println("FAIL: addContact()");
+            failed += 1;
         }
 
         if(failed != 0){
