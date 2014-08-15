@@ -323,6 +323,17 @@ public class Insightly{
             failed += 1;
         }
 
+        // Test getCurrencies()
+        try{
+            currencies = this.getCurrencies();
+            System.out.println("PASS: getCurrencies(), found " + currencies.length() + " currencies.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getCurrencies()");
+            failed += 1;
+        }
+
         if(failed != 0){
             throw new Exception(failed + " tests failed!");
         }
