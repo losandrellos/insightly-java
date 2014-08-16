@@ -242,8 +242,86 @@ public class Insightly{
         return InsightlyRequest.POST(apikey, url_path).body(comment).asJSONObject();
     }
 
+    public JSONArray getOpportunities() throws IOException{
+        return this.getOpportunities(null);
+    }
+
+    public JSONArray getOpportunities(Map<String, Object> options) throws IOException{
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Opportunities");
+        buildODataQuery(request, options);
+        return request.asJSONArray();
+    }
+
+    public JSONObject getOpportunity(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + id).asJSONObject();
+    }
+
     public void deleteNote(long id) throws IOException{
         InsightlyRequest.DELETE(apikey, "/v2.1/Notes/" + id).asString();
+    }
+
+    public JSONObject addOpportunity(JSONObject opportunity) throws IOException{
+        String url_path = "/v2.1/Opportunities";
+        InsightlyRequest request = null;
+
+        if(opportunity.has("OPPORTUNITY_ID") && (opportunity.getLong("OPPORTUNITY_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(opportunity).asJSONObject();
+    }
+
+    public void deleteOpportunity(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Opportunities/" + id).asString();
+    }
+
+    public JSONArray getOpportunityCategories() throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/OpportunityCategories").asJSONArray();
+    }
+
+    public JSONObject getOpportunityCategory(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/OpportunityCategries/" + id).asJSONObject();
+    }
+
+    public JSONObject addOpportunityCategory(JSONObject category) throws IOException{
+        String url_path = "/v2.1/OpportunityCategories";
+        InsightlyRequest request = null;
+
+        if(category.has("OPPORTUNITY_ID") && (category.getLong("OPPORTUNITY_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(category).asJSONObject();
+    }
+
+    public void deleteOpportunityCategory(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/OpportunityCategories/" + id).asString();
+    }
+
+    public JSONArray getOpportunityEmails(long opportunity_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/Emails").asJSONArray();
+    }
+
+    public JSONArray getOpportunityNotes(long opportunity_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/Notes").asJSONArray();
+    }
+
+    public JSONArray getOpportunityStateHistory(long opportunity_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/StateHistory").asJSONArray();
+    }
+
+    public JSONArray getOpportunityStateReasons() throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/OpportunityStateReasons").asJSONArray();
+    }
+
+    public JSONArray getOpportunityTasks(long opportunity_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/Tasks").asJSONArray();
     }
 
     public JSONArray getUsers() throws IOException{
@@ -641,13 +719,125 @@ public class Insightly{
             failed += 1;
         }
 
+        // Test getNotes()
         try{
             JSONArray notes = this.getNotes();
-            System.out.println("PASS: getNotes()");
+            System.out.println("PASS: getNotes(), found " + notes.length() + " notes.");
             passed += 1;
         }
         catch(Exception ex){
             System.out.println("FAIL: getNotes()");
+            failed += 1;
+        }
+
+        // Test getOpportunities
+        JSONObject opportunity = null;
+        try{
+            options = new HashMap<String, Object>();
+            options.put("orderby", "DATE_UPDATED_UTC");
+            options.put("top", top);
+            JSONArray opportunities = this.getOpportunities(options);
+            if(opportunities.length() > 0){
+                opportunity = (JSONObject)opportunities.get(0);
+            }
+            System.out.println("PASS: getOpportunities(), found " + opportunities.length() + " opportunities.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getOpportunities()");
+            ex.printStackTrace();
+            failed += 1;
+        }
+
+        // Test getOpportunityCategories()
+        try{
+            JSONArray categories = this.getOpportunityCategories();
+            System.out.println("PASS: getOpportunityCategories(), found " + categories.length() + " categories.");
+            passed += 1;
+        }
+        catch(IOException ex){
+            System.out.println("FAIL: getOpportunityCategories()");
+            failed += 1;
+        }
+
+        // Test addOpportunityCategory()
+        try{
+            category = new JSONObject();
+            category.put("CATEGORY_NAME", "Test Category");
+            category.put("ACTIVE", true);
+            category.put("BACKGROUND_COLOR", "000000");
+
+            category = this.addOpportunityCategory(category);
+            System.out.println("PASS: addOpportunityCategory()");
+            passed += 1;
+
+            this.deleteOpportunityCategory(category.getLong("CATEGORY_ID"));
+            System.out.println("PASS: deleteOpportunityCategory()");
+            passed += 1;            
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: addOpportunityCategory()");
+            failed += 1;
+            System.out.println("FAIL: deleteOpportunityCategory()");
+            failed += 1;
+        }
+
+        if(opportunity != null){
+            long opportunity_id = opportunity.getLong("OPPORTUNITY_ID");
+
+            // Test getOpportunityEmails()
+            try{
+                JSONArray emails = this.getOpportunityEmails(opportunity_id);
+                System.out.println("PASS: getOpportunityEmails(), found " + emails.length() + " emails.");
+                passed += 1;
+            }
+            catch(Exception ex){
+                System.out.println("FAIL: getOpportunityEmails()");
+                failed += 1;
+            }
+
+            //Test getOpportunityNotes()
+            try{
+                JSONArray notes = this.getOpportunityNotes(opportunity_id);
+                System.out.println("PASS: getOpportunityNotes(), found " + notes.length() + " notes.");
+                passed += 1;
+            }
+            catch(Exception ex){
+                System.out.println("FAIL: getOpportunityNotes()");
+                failed += 1;
+            }
+
+            // Test getOpportunityTasks()
+            try{
+                JSONArray tasks = this.getOpportunityTasks(opportunity_id);
+                System.out.println("PASS: getOpportunityTasks(), found " + tasks.length() + " tasks.");
+                passed += 1;
+            }
+            catch(Exception ex){
+                System.out.println("FAIL: getOpportunityTasks()");
+                failed += 1;
+            }
+
+            // Test getOpportunityStateHistory()
+            try{
+                JSONArray states = this.getOpportunityStateHistory(opportunity_id);
+                System.out.println("PASS: getOpportunityStateHistory(), found " + states.length() + " states in history.");
+                passed += 1;
+            }
+            catch(Exception ex){
+                System.out.println("FAIL: getOpportunityStateHistory()");
+                failed += 1;
+            }
+        }
+
+        // Test getOpportunityStateReasons()
+        try{
+            JSONArray reasons = this.getOpportunityStateReasons();
+            System.out.println("PASS: getOpportunityStateReasons(), found " + reasons.length() + " reasons.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getOpportunityStateReasons()");
             failed += 1;
         }
 
