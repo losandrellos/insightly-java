@@ -202,6 +202,50 @@ public class Insightly{
         InsightlyRequest.DELETE(apikey, "/v2.1/FileCategories/" + id);
     }
 
+    public JSONArray getNotes() throws IOException{
+        return this.getNotes(null);
+    }
+
+    public JSONArray getNotes(Map<String, Object> options) throws IOException{
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Notes");
+
+        if(options != null){
+            buildODataQuery(request, options);
+        }
+
+        return request.asJSONArray();
+    }
+
+    public JSONObject getNote(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Notes/" + id).asJSONObject();
+    }
+
+    public JSONObject addNote(JSONObject note) throws IOException{
+        InsightlyRequest request = null;
+
+        if(note.has("NOTE_ID") && (note.getLong("NOTE_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, "/v2.1/Notes");
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, "/v2.1/Notes");
+        }
+
+        return request.body(note).asJSONObject();
+    }
+
+    public JSONArray getNoteComments(long note_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Notes/" + note_id + "/Comments").asJSONArray();
+    }
+
+    public JSONObject addNoteComment(long note_id, JSONObject comment) throws IOException{
+        String url_path = "/v2.1/Notes/" + note_id + "/Comments";
+        return InsightlyRequest.POST(apikey, url_path).body(comment).asJSONObject();
+    }
+
+    public void deleteNote(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Notes/" + id).asString();
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -588,12 +632,22 @@ public class Insightly{
         try{
             if(category != null){
                 this.deleteFileCategory(category.getLong("CATEGORY_ID"));
-                System.out.println("PASS deleteFileCategory()");
+                System.out.println("PASS: deleteFileCategory()");
                 passed += 1;
             }
         }
         catch(Exception ex){
             System.out.println("FAIL: deleteFileCategory()");
+            failed += 1;
+        }
+
+        try{
+            JSONArray notes = this.getNotes();
+            System.out.println("PASS: getNotes()");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getNotes()");
             failed += 1;
         }
 
