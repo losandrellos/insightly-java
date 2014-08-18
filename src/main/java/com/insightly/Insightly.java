@@ -21,64 +21,48 @@ public class Insightly{
     }
 
     public JSONObject addContact(JSONObject contact) throws IOException{
-        try{
-            if(contact.has("CONTACT_ID") && (contact.getLong("CONTACT_ID") > 0)){
-                return verifyResponse(generateRequest("/v2.1/Contacts", "PUT", contact.toString()).asJson()).getBody().getObject();
-            }
-            else{
-                return verifyResponse(generateRequest("/v2.1/Contacts", "POST", contact.toString()).asJson()).getBody().getObject();
-            }
+        String url_path = "/v2.1/Contacts";
+        InsightlyRequest request = null;
+
+        if(contact.has("CONTACT_ID") && (contact.getLong("CONTACT_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
         }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
         }
+
+        return request.body(contact).asJSONObject();
     }
 
     public void deleteContact(long contact_id) throws IOException{
-        try{
-            verifyResponse(generateRequest("/v2.1/Contacts/" + contact_id, "DELETE", "").asJson());
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        InsightlyRequest.DELETE(apikey, "/v2.1/Contacts/" + contact_id).asString();
     }
 
     public JSONArray getContacts(Map<String, Object> options) throws IOException{
-        try{
-            List<String> query_strings = new ArrayList<String>();
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Contacts");
 
-            if(options.containsKey("email") && (options.get("email") != null)){
-                String email = (String)options.get("email");
-                query_strings.add("email=" + email);
-            }
-            if(options.containsKey("tag") && (options.get("tag") != null)){
-                String tag = (String)options.get("tag");
-                query_strings.add("tag=" + tag);
-            }
-            if(options.containsKey("ids") && (options.get("ids") != null)){
-                List<Long> ids = (List<Long>)options.get("ids");
-                if(ids.size() > 0){
-                    StringBuilder acc = new StringBuilder();
-                    for(Long id : ids){
-                        acc.append(id);
-                        acc.append(",");
-                    }
-
-                    query_strings.add("ids=" + acc);
+        if(options.containsKey("email") && (options.get("email") != null)){
+            String email = (String)options.get("email");
+            request.queryParam("email", email);
+        }
+        if(options.containsKey("tag") && (options.get("tag") != null)){
+            String tag = (String)options.get("tag");
+            request.queryParam("tag", tag);
+        }
+        if(options.containsKey("ids") && (options.get("ids") != null)){
+            List<Long> ids = (List<Long>)options.get("ids");
+            if(ids.size() > 0){
+                StringBuilder acc = new StringBuilder();
+                for(Long id : ids){
+                    acc.append(id);
+                    acc.append(",");
                 }
-            }
 
-            StringBuilder query_string = new StringBuilder();
-            for(String s : query_strings){
-                query_string.append(s);
-                query_string.append("&");
+                request.queryParam("ids", acc.toString());
             }
+        }
 
-            return verifyResponse(generateRequest("/v2.1/Contacts" + query_string, "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return request.asJSONArray();
     }
 
     public JSONObject getContact(long id) throws IOException{
@@ -86,57 +70,27 @@ public class Insightly{
     }
 
     public JSONArray getContactEmails(long contact_id) throws IOException{
-        try{
-            return verifyResponse(generateRequest("/v2.1/Contacts/" + contact_id + "/Emails", "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + contact_id + "/Emails").asJSONArray();
     }
 
     public JSONArray getContactNotes(long contact_id) throws IOException{
-        try{
-            return verifyResponse(generateRequest("/v2.1/Contacts/" + contact_id + "/Notes", "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + contact_id + "/Notes").asJSONArray();
     }
 
     public JSONArray getContactTasks(long contact_id) throws IOException{
-        try{
-            return verifyResponse(generateRequest("/v2.1/Contacts/" + contact_id + "/Tasks", "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + contact_id + "/Tasks").asJSONArray();
     }
 
     public JSONArray getCountries() throws IOException{
-        try{
-            return verifyResponse(generateRequest("/v2.1/Countries", "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return InsightlyRequest.GET(apikey, "/v2.1/Countries").asJSONArray();
     }
 
     public JSONArray getCurrencies() throws IOException{
-        try{
-            return verifyResponse(generateRequest("/v2.1/Currencies", "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return InsightlyRequest.GET(apikey, "/v2.1/Currencies").asJSONArray();
     }
 
     public JSONArray getCustomFields() throws IOException{
-        try{
-            return verifyResponse(generateRequest("/v2.1/CustomFields", "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return InsightlyRequest.GET(apikey, "/v2.1/CustomFields").asJSONArray();
     }
 
     public JSONObject getCustomField(long id) throws IOException{
@@ -144,13 +98,8 @@ public class Insightly{
     }
 
     public JSONArray getEmails(Map<String, Object> options) throws IOException{
-        try{
-            String query_string = buildQueryString(buildODataQuery(options));
-            return verifyResponse(generateRequest("/v2.1/Emails" + query_string, "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Emails");
+        return buildODataQuery(request, options).asJSONArray();
     }
 
     public JSONObject getEmail(long id) throws IOException{
@@ -587,12 +536,7 @@ public class Insightly{
     }
 
     public JSONArray getUsers() throws IOException{
-        try{
-            return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
-        }
-        catch(UnirestException ex){
-            throw new IOException(ex.getMessage());
-        }
+        return InsightlyRequest.GET(apikey, "/v2.1/Users").asJSONArray();
     }
 
     public JSONObject getUser(long id) throws IOException{
@@ -626,102 +570,6 @@ public class Insightly{
         }
 
         return request;
-    }
-
-    protected List<String> buildODataQuery(Map<String, Object> options){
-        List<String> query_strings = new ArrayList<String>();
-        if(options.containsKey("top") && (options.get("top") != null)){
-            long top = ((Number)options.get("top")).longValue();
-            if(top > 0){
-                query_strings.add("$top=" + top);
-            }
-        }
-        if(options.containsKey("skip") && (options.get("skip") != null)){
-            long skip = ((Number)options.get("skip")).longValue();
-            if(skip > 0){
-                query_strings.add("$skip=" + skip);
-            }
-        }
-        if(options.containsKey("orderby") && (options.get("orderby") != null)){
-            String orderby = (String)options.get("orderby");
-            // TODO:  encode orderby
-            query_strings.add("$orderby=" + orderby);
-        }
-        if(options.containsKey("filters") && (options.get("filters") != null)){
-            List<String> filters = (List<String>)options.get("filters");
-            for(String f : filters){
-                // TODO: encode f
-                query_strings.add("$filter=" + f);
-            }
-        }
-
-        return query_strings;
-    }
-
-    protected String buildQueryString(List<String> query_strings){
-        StringBuilder query_string = new StringBuilder();
-        if(query_strings.size() > 0){
-            boolean first = true;
-            for(String s : query_strings){
-                if(!first){
-                    query_string.append("&");
-                    first = false;
-                }
-
-                query_string.append(s);
-            }
-        }
-
-        return query_string.toString();
-    }
-
-    public HttpRequest generateRequest(String url, String method, String data) throws IOException{
-        try{
-            HttpRequest request = null;
-            url = BASE_URL + url;
-
-            if(method.equals("GET")){
-                request = Unirest.get(url);
-            }
-            else if(method.equals("PUT")){
-                HttpRequestWithBody req = Unirest.put(url);
-                req.header("Content-Type", "application/json");
-                req.body(data);
-
-                request = req;
-            }
-            else if(method.equals("DELETE")){
-                request = Unirest.delete(url);
-            }
-            else if(method.equals("POST")){
-                HttpRequestWithBody req = Unirest.post(url);
-                req.header("Content-Type", "application/json");
-                req.body(data);
-
-                request = req;
-            }
-            else{
-                throw new IOException("parameter method must be GET|DELETE|PUT|UPDATE");
-            }
-
-            request.basicAuth(apikey, "");
-
-            return request;
-        }
-        catch(IOException ex){
-            throw ex;
-        }
-    }
-
-    protected <T> HttpResponse<T> verifyResponse(HttpResponse<T> response) throws IOException{
-        int status_code = response.getCode();
-        if(!(status_code == 200
-             || status_code == 201
-             || status_code == 202)){
-            throw new IOException("Server returned status code " + response.getCode());
-        }
-
-        return response;
     }
 
     public static void main(String[] args) throws Exception{
