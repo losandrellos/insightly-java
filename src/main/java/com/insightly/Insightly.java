@@ -81,6 +81,10 @@ public class Insightly{
         }
     }
 
+    public JSONObject getContact(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + id).asJSONObject();
+    }
+
     public JSONArray getContactEmails(long contact_id) throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Contacts/" + contact_id + "/Emails", "GET", "").asJson()).getBody().getArray();
