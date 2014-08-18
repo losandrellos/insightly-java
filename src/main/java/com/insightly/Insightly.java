@@ -505,6 +505,57 @@ public class Insightly{
         return null;
     }
 
+    public JSONArray getTeams() throws IOException{
+        return this.getTeams(null);
+    }
+
+    public JSONArray getTeams(Map<String, Object> options) throws IOException{
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Teams");
+        return buildODataQuery(request, options).asJSONArray();
+    }
+
+    public JSONObject getTeam(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Teams/" + id).asJSONObject();
+    }
+
+    public JSONObject addTeam(JSONObject team) throws IOException{
+        String url_path = "/v2.1/Teams";
+        InsightlyRequest request = null;
+
+        if(team.has("TEAM_ID") && (team.getLong("TEAM_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(team).asJSONObject();
+    }
+
+    public void deleteTeam(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Teams/" + id).asString();
+    }
+
+    public JSONArray getTeamMembers(long team_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/TeamMembers/teamid=" + team_id).asJSONArray();
+    }
+
+    public JSONObject getTeamMember(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/TeamMembers/" + id).asJSONObject();
+    }
+
+    public JSONObject addTeamMember(JSONObject team_member) throws IOException{
+        return InsightlyRequest.POST(apikey, "/v2.1/TeamMembers").body(team_member).asJSONObject();
+    }
+
+    public void deleteTeamMember(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/TeamMembers/" + id).asString();
+    }
+
+    public JSONObject updateTeamMember(JSONObject team_member) throws IOException{
+        return InsightlyRequest.PUT(apikey, "/v2.1/TeamMembers").body(team_member).asJSONObject();
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -1209,6 +1260,17 @@ public class Insightly{
             failed += 1;
         }
 
+        // Test getRelationships()
+        try{
+            JSONArray relationships = this.getRelationships();
+            System.out.println("PASS: getRelationships(), found " + relationships.length() + " relationships.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getRelationships()");
+            failed += 1;
+        }
+
         // Test getTasks()
         try{
             options = new HashMap<String, Object>();
@@ -1223,14 +1285,28 @@ public class Insightly{
             failed += 1;
         }
 
-        // Test getRelationships()
+        // Test getTeams()
         try{
-            JSONArray relationships = this.getRelationships();
-            System.out.println("PASS: getRelationships(), found " + relationships.length() + " relationships.");
+            JSONArray teams = this.getTeams();
+            System.out.println("PASS: getTeams(), found " + teams.length() + " teams.");
             passed += 1;
+
+            if(teams.length() > 0){
+                JSONObject team = teams.getJSONObject(0);
+                long team_id = team.getLong("TEAM_ID");
+                try{
+                    JSONArray team_members = this.getTeamMembers(team_id);
+                    System.out.println("PASS: getTeamMembers(), found " + team_members.length() + " team members.");
+                    passed += 1;
+                }
+                catch(Exception ex){
+                    System.out.println("FAIL: getTeamMembers()");
+                    failed += 1;
+                }
+            }
         }
         catch(Exception ex){
-            System.out.println("FAIL: getRelationships()");
+            System.out.println("FAIL: getTeams()");
             failed += 1;
         }
 
