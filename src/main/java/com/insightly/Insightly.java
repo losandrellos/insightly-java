@@ -461,6 +461,10 @@ public class Insightly{
         return InsightlyRequest.GET(apikey, "/v2.1/Relationships").asJSONArray();
     }
 
+    public JSONArray getTags(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Tags/" + id).asJSONArray();
+    }
+
     public JSONArray getTasks() throws IOException{
         return this.getTasks(null);
     }
