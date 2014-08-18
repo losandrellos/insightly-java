@@ -15,6 +15,180 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 
+/**
+   <p>
+   Insightly Java library for Insightly API
+   This library provides user friendly access to the version 2.1 REST API for Insightly.
+   </p>
+   
+   <p>
+   The library is implemented as a standard Maven project,
+   so all dependencies can be automatically resolved.
+   The methods return appropriate JSON objects from org.json,
+   so that objects are described in an agnostic manner.
+   </p>
+   
+   <h1>USAGE:</h1>
+   
+   <p>
+   Simply include the library as a dependency in your Maven project.
+   See the project README for more information.
+   </p>
+
+   </p>
+   This class also includes a test() function that you can use
+   to perform a simple connectivity and sanity check of the library
+   to ensure that the library is functioning on your system).
+   To use it, simply create an Insightly object and invoke the {@link #test()} method:
+   </p>
+
+   <pre>
+   {@code
+   Insightly i = new Insightly(<your-api-key>);
+   i.test();
+   }
+   </pre>
+
+   <p>
+   For your convenience, this class includes a {@link #main(String[]) main} function
+   that does exactly that.
+   You can run execute this using Maven via the following command:
+   </p>
+
+   {@code
+   mvn exec:java -Dexec.mainClass="com.insightly.Insightly" -Dexec.args="<your-api-key>"
+   }
+   
+   <p>
+   This will run an automatic test suite against your Insightly account.
+   If the methods you need all pass, you're good to go!
+   </p>
+   
+   <p>
+   If you are working with very large recordsets,
+   you should use ODATA filters to access data in smaller chunks.
+   This is a good idea in general to minimize server response times.
+   </p>
+   
+   <h1>BASIC USE PATTERNS:</h1>
+   
+   <h2>CREATE/UPDATE ACTIONS</h2>
+   
+   <p>
+   These methods expect a {@link org.json.JSONObject}
+   containing valid data fields for the object.
+   They will return a {@link org.json.JSONObject} containing the object
+   as stored on the server (if successful)
+   or throw an exception if the create/update request fails.
+   You indicate whether you want to
+   create a new item by setting the record id to 0 or omitting it.
+   </p>
+
+   <h2>SEARCH ACTIONS</h2>
+   
+   <p>
+   These methods return a {@link org.json.JSONArray}
+   containing the matching items.
+   For example to request a list of all contacts, you call:
+   </p>
+
+   <pre>
+   {@code
+   Insightly i = Insightly("your API key");
+   JSONArray contacts = i.getContacts();
+   }
+   </pre>
+   
+   <h2>SEARCH ACTIONS USING ODATA</h2>
+   
+   <p>
+   Search methods recognize top, skip, orderby and filters parameters,
+   which you can use to page, order and filter recordsets.
+   These are passed to the method via a {@code Map<String, Object>} object.
+   </p>
+
+   <pre>
+   {@code
+   Map<String, Object> options = new HashMap<String, Object>();
+   options.put("top", 200);
+   JSONArray contacts = i.getContacts(options); // returns the top 200 contacts
+
+   options = new HashMap<String, Object>();
+   options.put("orderby", "FIRST_NAME desc");
+   options.put("top", 200);
+   contacts = i.getContacts(options); // returns the top 200 contacts, with first name descending order
+
+   options = new HashMap<String, Object>();
+   options.put("top", 200);
+   options.put("skip", 200);
+   contacts = i.getContacts(options); // return 200 records, after skipping the first 200 records
+
+   List<String> filters = new ArrayList<String>();
+   filters.add("First_name='Brian'");
+   options = new HashMap<String, Object>();
+   options.put("filters", filters);
+   contacts = i.getContacts(options); // get contacts where FIRST_NAME='Brian'
+   }
+   </pre>
+
+   <p>
+   <strong>IMPORTANT NOTE:</strong> when using OData filters,
+   be sure to include escaped quotes around the search term,
+   otherwise you will get a 400 (bad request) error
+   </p>
+
+   <p>
+   These methods will raise an exception if the lookup fails,
+   or return a list of dictionaries if successful,
+   or an empty list if no records were found.
+   </p>
+   
+   <h2>READ ACTIONS (SINGLE ITEM)</h2>
+   
+   <p>
+   These methods will return a single dictionary
+   containing the requested item's details.
+   e.g. {@code contact = i.getContact(123456)}
+   </p>
+   
+   <h2>DELETE ACTIONS</h2>
+   
+   <p>
+   These methods will return if successful, or raise an exception.
+   e.g. {@code i.deleteContact(123456)}
+   </p>
+   
+   <h2>IMAGE AND FILE ATTACHMENT MANAGEMENT</h2>
+   
+   <p>
+   The API calls to manage images and file attachments
+   have not yet been implemented in the Java library.
+   However you can access these directly via our REST API
+   </p>
+   
+   <h2>ISSUES TO BE AWARE OF</h2>
+   
+   <p>
+   This library makes it easy to integrate with Insightly,
+   and by automating HTTPS requests for you,
+   eliminates the most common causes of user issues.
+   That said, the library is picky about rejecting requests
+   that do not have required fields,
+   or have invalid field values (such as an invalid USER_ID).
+   When this happens, you'll get a 400 (bad request) error.
+   Your best bet at this point is to consult the API documentation
+   and look at the required request data.
+   </p>
+
+   <p>
+   If you are working with large recordsets,
+   we strongly recommend that you use ODATA functions,
+   such as top and skip to page through recordsets
+   rather than trying to fetch entire recordsets in one go.
+   This both improves client/server communication,
+   but also minimizes memory requirements on your end.
+   </p>
+ */
 public class Insightly{
     public Insightly(String apikey){
         this.apikey = apikey;
@@ -572,6 +746,10 @@ public class Insightly{
         return request;
     }
 
+    /**
+       Execute the test suite.
+       Expects your api key to be passed as a command-line parameter.
+     */
     public static void main(String[] args) throws Exception{
         if(args.length < 1){
             System.err.println("Please provide your api key as a command-line argument");
