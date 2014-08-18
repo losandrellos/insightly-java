@@ -565,6 +565,10 @@ public class Insightly{
         }
     }
 
+    public JSONObject getUser(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Users/" + id).asJSONObject();
+    }
+
     private InsightlyRequest buildODataQuery(InsightlyRequest request, Map<String, Object> options){
         if(options == null){
             return request;
