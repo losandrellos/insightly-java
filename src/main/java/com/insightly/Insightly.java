@@ -368,6 +368,22 @@ public class Insightly{
         return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + organization_id + "/Tasks").asJSONArray();
     }
 
+    public JSONArray getPipelines() throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Pipelines").asJSONArray();
+    }
+
+    public JSONObject getPipeline(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Pipelines/" + id).asJSONObject();
+    }
+
+    public JSONArray getPipelineStages() throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/PipelineStages").asJSONArray();
+    }
+
+    public JSONObject getPipelineStage(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/PipelineStages/" + id).asJSONObject();
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -954,6 +970,28 @@ public class Insightly{
         catch(Exception ex){
             System.out.println("FAIL: addOrganization()");
             ex.printStackTrace();
+            failed += 1;
+        }
+
+        // Test getPipelines()
+        try{
+            JSONArray pipelines = this.getPipelines();
+            System.out.println("PASS: getPipelines(), found " + pipelines.length() + " pipelines.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getPilelines()");
+            failed += 1;
+        }
+
+        // Test getPipelineStages()
+        try{
+            JSONArray stages = this.getPipelineStages();
+            System.out.println("PASS: getPipelineStages(), found " + stages.length() + " stages.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getPipelineStages()");
             failed += 1;
         }
 
