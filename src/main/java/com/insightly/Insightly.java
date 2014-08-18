@@ -324,6 +324,50 @@ public class Insightly{
         return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/Tasks").asJSONArray();
     }
 
+    public JSONArray getOrganizations() throws IOException{
+        return this.getOrganizations(null);
+    }
+
+    public JSONArray getOrganizations(Map<String, Object> options) throws IOException{
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Organisations");
+        buildODataQuery(request, options);
+        return request.asJSONArray();
+    }
+
+    public JSONObject getOrganization(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + id).asJSONObject();
+    }
+
+    public JSONObject addOrganization(JSONObject organization) throws IOException{
+        String url_path = "/v2.1/Organisations";
+        InsightlyRequest request = null;
+
+        if(organization.has("ORGANISATION_ID") && (organization.getLong("ORGANISATION_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(organization).asJSONObject();
+    }
+
+    public void deleteOrganization(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Organisations/" + id).asString();
+    }
+
+    public JSONArray getOrganizationEmails(long organization_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + organization_id + "/Emails").asJSONArray();
+    }
+
+    public JSONArray getOrganizationNotes(long organization_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + organization_id + "/Notes").asJSONArray();
+    }
+
+    public JSONArray getOrganizationTasks(long organization_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + organization_id + "/Tasks").asJSONArray();
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -841,10 +885,82 @@ public class Insightly{
             failed += 1;
         }
 
+         // Test getOrganizations()
+        try{
+            options = new HashMap<String, Object>();
+            options.put("top", top);
+            options.put("orderby", "DATE_UPDATED_UTC desc");
+            JSONArray organizations = this.getOrganizations(options);
+            System.out.println("PASS: getOrganizations(), found " + organizations.length() + " organizations");
+            passed += 1;
+
+            if(organizations.length() > 0){
+                JSONObject organization = organizations.getJSONObject(0);
+                long organization_id = organization.getLong("ORGANISATION_ID");
+
+                // Test getOrganizationEmails()
+                try{
+                    JSONArray emails = this.getOrganizationEmails(organization_id);
+                    System.out.println("PASS: getOrganizationEmails(), found " + emails.length() + " emails.");
+                    passed += 1;
+                }
+                catch(IOException ex){
+                    System.out.println("FAIL: getOrganizationEmails()");
+                    failed += 1;
+                }
+
+                // Test getOrganizationNotes()
+                try{
+                    JSONArray notes = this.getOrganizationNotes(organization_id);
+                    System.out.println("PASS: getOrganizationNotes(), found " + notes.length() + " emails.");
+                    passed += 1;
+                }
+                catch(Exception ex){
+                    System.out.println("FAIL: getOrganizationNotes()");
+                    failed += 1;
+                }
+
+                // Test getOrganizationTasks()
+                try{
+                    JSONArray tasks = this.getOrganizationTasks(organization_id);
+                    System.out.println("PASS: getOrganizationTasks(), found " + tasks.length() + " tasks.");
+                    passed += 1;
+                }
+                catch(Exception ex){
+                    System.out.println("FAIL: getOrganizationTasks()");
+                    failed += 1;
+                }
+            }
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getOrganizations()");
+            ex.printStackTrace();
+            failed += 1;
+        }
+
+        // Test addOrganization()
+        try{
+            JSONObject organization = new JSONObject();
+            organization.put("ORGANISATION_NAME", "Foo Corp");
+            organization.put("BACKGROUND", "Details");
+            organization = this.addOrganization(organization);
+            System.out.println("PASS: addOrganization()");
+            passed += 1;
+
+            this.deleteOrganization(organization.getLong("ORGANISATION_ID"));
+            System.out.println("PASS: deleteOrganization()");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: addOrganization()");
+            ex.printStackTrace();
+            failed += 1;
+        }
+
         if(failed != 0){
             throw new Exception(failed + " tests failed!");
         }
-    }
+   }
 
     public final String BASE_URL = "https://api.insight.ly";
 
