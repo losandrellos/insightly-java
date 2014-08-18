@@ -461,6 +461,46 @@ public class Insightly{
         return InsightlyRequest.GET(apikey, "/v2.1/Relationships").asJSONArray();
     }
 
+    public JSONArray getTasks() throws IOException{
+        return this.getTasks(null);
+    }
+
+    public JSONArray getTasks(Map<String, Object> options) throws IOException{
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Tasks");
+        return buildODataQuery(request, options).asJSONArray();
+    }
+
+    public JSONObject getTask(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Tasks/" + id).asJSONObject();
+    }
+
+    public JSONObject addTask(JSONObject task) throws IOException{
+        String url_path = "/v2.1/Tasks";
+        InsightlyRequest request = null;
+
+        if(task.has("TASK_ID") && (task.getLong("TASK_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(task).asJSONObject();
+    }
+
+    public void deleteTask(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Tasks/" + id).asString();
+    }
+
+    public JSONArray getTaskComments(long task_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Tasks/" + task_id + "/Comments").asJSONArray();
+    }
+
+    public JSONObject addTaskComment(long task_id, JSONObject comment) throws IOException{
+        // Not implemented yet.
+        return null;
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -471,6 +511,10 @@ public class Insightly{
     }
 
     private InsightlyRequest buildODataQuery(InsightlyRequest request, Map<String, Object> options){
+        if(options == null){
+            return request;
+        }
+
         if(options.containsKey("top") && (options.get("top") != null)){
             long top = ((Number)options.get("top")).longValue();
             if(top > 0){
@@ -1158,6 +1202,20 @@ public class Insightly{
         }
         catch(Exception ex){
             System.out.println("FAIL: addProjectCategory()");
+            failed += 1;
+        }
+
+        // Test getTasks()
+        try{
+            options = new HashMap<String, Object>();
+            options.put("top", top);
+            options.put("orderby", "DUE_DATE desc");
+            JSONArray tasks = this.getTasks(options);
+            System.out.println("PASS: getTasks(), found " + tasks.length() + " tasks.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getTasks()");
             failed += 1;
         }
 
