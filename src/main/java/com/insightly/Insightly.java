@@ -384,6 +384,79 @@ public class Insightly{
         return InsightlyRequest.GET(apikey, "/v2.1/PipelineStages/" + id).asJSONObject();
     }
 
+    public JSONArray getProjects() throws IOException{
+        return this.getProjects(null);
+    }
+
+    public JSONArray getProjects(Map<String, Object> options) throws IOException{
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Projects");
+
+        if(options != null){
+            buildODataQuery(request, options);
+        }
+
+        return request.asJSONArray();
+    }
+
+    public JSONObject getProject(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + id).asJSONObject();
+    }
+
+    public JSONObject addProject(JSONObject project) throws IOException{
+        String url_path = "/v2.1/Projects";
+        InsightlyRequest request = null;
+
+        if(project.has("PROJECT_ID") && (project.getLong("PROJECT_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(project).asJSONObject();
+    }
+
+    public void deleteProject(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Projects/" + id).asString();
+    }
+
+    public JSONArray getProjectEmails(long project_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + project_id + "/Emails").asJSONArray();
+    }
+
+    public JSONArray getProjectNotes(long project_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + project_id + "/Notes").asJSONArray();
+    }
+
+    public JSONArray getProjectTasks(long project_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + project_id + "/Tasks").asJSONArray();
+    }
+
+    public JSONArray getProjectCategories() throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/ProjectCategories").asJSONArray();
+    }
+
+    public JSONObject getProjectCategory(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/ProjectCategories/" + id).asJSONObject();
+    }
+
+    public JSONObject addProjectCategory(JSONObject category) throws IOException{
+        String url_path = "/v2.1/ProjectCategories";
+        InsightlyRequest request = null;
+        if(category.has("CATEGORY_ID") && (category.getLong("CATEGORY_ID") > 0)){
+            request = InsightlyRequest.PUT(apikey, url_path);
+        }
+        else{
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(category).asJSONObject();
+    }
+
+    public void deleteProjectCategory(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/ProjectCategories/" + id).asString();
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -992,6 +1065,95 @@ public class Insightly{
         }
         catch(Exception ex){
             System.out.println("FAIL: getPipelineStages()");
+            failed += 1;
+        }
+
+        // Test getProjects()
+        try{
+            options = new HashMap<String, Object>();
+            options.put("top", top);
+            options.put("orderby", "DATE_UPDATED_UTC desc");
+            JSONArray projects = this.getProjects(options);
+            System.out.println("PASS: getProjects(), found " + projects.length() + " projects.");
+            passed += 1;
+
+            if(projects.length() > 0){
+                JSONObject project = projects.getJSONObject(0);
+                long project_id = project.getLong("PROJECT_ID");
+
+                // Test getProjectEmails()
+                try{
+                    JSONArray emails = this.getProjectEmails(project_id);
+                    System.out.println("PASS: getProjectEmails(), found " + emails.length() + " projects.");
+                    passed += 1;
+                }
+                catch(Exception ex){
+                    System.out.println("FAIL: getProjectEmails()");
+                    failed += 1;
+                }
+
+                // Test getProjectNotes()
+                try{
+                    JSONArray notes = this.getProjectNotes(project_id);
+                    System.out.println("PASS: getProjectNotes(), found " + notes.length() + " notes.");
+                    passed += 1;
+                }
+                catch(Exception ex){
+                    System.out.println("FAIL: getProjectNotes()");
+                    failed += 1;
+                }
+
+                // Test getProjectTasks()
+                try{
+                    JSONArray tasks = this.getProjectTasks(project_id);
+                    System.out.println("PASS: getProjectTasks(), found " + tasks.length() + " tasks.");
+                    passed += 1;
+                }
+                catch(Exception ex){
+                    System.out.println("FAIL: getProjectTasks()");
+                    failed += 1;
+                }
+            }
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getProjects()");
+            failed += 1;
+        }
+
+        // Test getProjectCategories()
+        try{
+            JSONArray categories = this.getProjectCategories();
+            System.out.println("PASS: getProjectCategories(), found " + categories.length() + " categories.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getProjectCategories()");
+            failed += 1;
+        }
+
+        // Test addProjectCategory()
+        try{
+            category = new JSONObject();
+            category.put("CATEGORY_NAME", "Test Category");
+            category.put("ACTIVE", true);
+            category.put("BACKGROUND_COLOR", "000000");
+            category = this.addProjectCategory(category);
+            System.out.println("PASS: addProjectCategory()");
+            passed += 1;
+
+            // Test deleteProjectCategory()
+            try{
+                this.deleteProjectCategory(category.getLong("CATEGORY_ID"));
+                System.out.println("PASS: deleteProjectCategory()");
+                passed += 1;
+            }
+            catch(Exception ex){
+                System.out.println("FAIL: deleteProjectCategory()");
+                failed += 1;
+            }
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: addProjectCategory()");
             failed += 1;
         }
 
