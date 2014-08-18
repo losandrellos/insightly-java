@@ -153,6 +153,28 @@ public class Insightly{
         }
     }
 
+    public JSONObject getEmail(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Emails/" + id).asJSONObject();
+    }
+
+    public void deleteEmail(long id) throws IOException{
+        InsightlyRequest.DELETE(apikey, "/v2.1/Emails/" + id).asString();
+    }
+
+    public JSONArray getEmailComments(long email_id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Emails/" + email_id + "/Comments").asJSONArray();
+    }
+
+    public JSONObject addCommentToEmail(long email_id, String body, long owner_user_id) throws IOException{
+        JSONObject data = new JSONObject();
+        data.put("BODY", body);
+        data.put("OWNER_USER_ID", owner_user_id);
+
+        return InsightlyRequest.POST(apikey, "/v2.1/Emails/" + email_id + "/Comments")
+            .body(data)
+            .asJSONObject();
+    }
+
     public JSONObject getEvent(long id) throws IOException{
         return InsightlyRequest.GET(apikey, "/v2.1/Events/" + id).asJSONObject();
     }
