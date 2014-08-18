@@ -1,8 +1,11 @@
 package com.insightly;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.http.client.utils.URIBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,10 +36,14 @@ public class InsightlyRequest{
     }
 
     protected InsightlyRequest(String apikey, String path, String method){
-        this.apikey = apikey;
-        this.path = path;
-        this.method = method;
-        this.query_strings = new ArrayList<String>();
+        try{
+            this.apikey = apikey;
+            this.url = new URIBuilder(BASE_URL + path);
+            this.method = method;
+        }
+        catch(URISyntaxException ex){
+            throw new IllegalArgumentException("Invalid URL: " + ex.getMessage());
+        }
     }
 
     public JSONArray asJSONArray() throws IOException{
@@ -80,41 +87,18 @@ public class InsightlyRequest{
     }
 
     public InsightlyRequest queryParam(String name, String value){
-        // TODO:  encode value
-        return this.addQueryString(name + "=" + value);
-    }
-
-    public InsightlyRequest queryParam(String name, long value){
-        return this.addQueryString(name + "=" + value);
-    }
-
-    private InsightlyRequest addQueryString(String query_string){
-        this.query_strings.add(query_string);
+        this.url.addParameter(name, value);
         return this;
     }
 
-    protected String buildQueryString(){
-        StringBuilder query_string = new StringBuilder();
-        if(query_strings.size() > 0){
-            query_string.append("?");
-            boolean first = true;
-            for(String s : query_strings){
-                if(!first){
-                    query_string.append("&");
-                    first = false;
-                }
-
-                query_string.append(s);
-            }
-        }
-
-        return query_string.toString();
+    public InsightlyRequest queryParam(String name, long value){
+        return this.queryParam(name, String.valueOf(value));
     }
 
     private HttpRequest buildHttpRequest() throws IOException{
         try{
             HttpRequest request = null;
-            String url = BASE_URL + this.path + this.buildQueryString();
+            String url = this.url.toString();
 
             if(method.equals("GET")){
                 request = Unirest.get(url);
@@ -191,8 +175,7 @@ public class InsightlyRequest{
     }
 
     private String apikey;
-    private String path;
+    private URIBuilder url;
     private String method;
     private String body;
-    private List<String> query_strings;
 }
