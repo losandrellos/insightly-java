@@ -457,6 +457,10 @@ public class Insightly{
         InsightlyRequest.DELETE(apikey, "/v2.1/ProjectCategories/" + id).asString();
     }
 
+    public JSONArray getRelationships() throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/Relationships").asJSONArray();
+    }
+
     public JSONArray getUsers() throws IOException{
         try{
             return verifyResponse(generateRequest("/v2.1/Users", "GET", "").asJson()).getBody().getArray();
@@ -1154,6 +1158,17 @@ public class Insightly{
         }
         catch(Exception ex){
             System.out.println("FAIL: addProjectCategory()");
+            failed += 1;
+        }
+
+        // Test getRelationships()
+        try{
+            JSONArray relationships = this.getRelationships();
+            System.out.println("PASS: getRelationships(), found " + relationships.length() + " relationships.");
+            passed += 1;
+        }
+        catch(Exception ex){
+            System.out.println("FAIL: getRelationships()");
             failed += 1;
         }
 
