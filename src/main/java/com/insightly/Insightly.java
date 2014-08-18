@@ -139,6 +139,10 @@ public class Insightly{
         }
     }
 
+    public JSONObject getCustomField(long id) throws IOException{
+        return InsightlyRequest.GET(apikey, "/v2.1/CustomFields/" + id).asJSONObject();
+    }
+
     public JSONArray getEmails(Map<String, Object> options) throws IOException{
         try{
             String query_string = buildQueryString(buildODataQuery(options));
