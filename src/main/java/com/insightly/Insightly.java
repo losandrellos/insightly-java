@@ -690,7 +690,9 @@ public class Insightly{
     }
 
     public JSONArray getTeamMembers(long team_id) throws IOException{
-        return InsightlyRequest.GET(apikey, "/v2.1/TeamMembers/teamid=" + team_id).asJSONArray();
+        return InsightlyRequest.GET(apikey, "/v2.1/TeamMembers")
+            .queryParam("teamid", team_id)
+            .asJSONArray();
     }
 
     public JSONObject getTeamMember(long id) throws IOException{
