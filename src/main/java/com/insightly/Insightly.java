@@ -235,8 +235,7 @@ public class Insightly{
                 request.queryParam("ids", acc.toString());
             }
         }
-
-        return request.asJSONArray();
+        return buildODataQuery(request, options).asJSONArray();
     }
 
     public JSONObject getContact(long id) throws IOException{
@@ -308,10 +307,7 @@ public class Insightly{
 
     public JSONArray getEvents(Map<String, Object> options) throws IOException{
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Events");
-        if(options != null){
-            buildODataQuery(request, options);
-        }
-        return request.asJSONArray();
+        return buildODataQuery(request, options).asJSONArray();
     }
 
     public JSONObject addEvent(JSONObject event) throws IOException{
@@ -361,12 +357,7 @@ public class Insightly{
 
     public JSONArray getNotes(Map<String, Object> options) throws IOException{
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Notes");
-
-        if(options != null){
-            buildODataQuery(request, options);
-        }
-
-        return request.asJSONArray();
+        return buildODataQuery(request, options).asJSONArray();
     }
 
     public JSONObject getNote(long id) throws IOException{
@@ -401,8 +392,7 @@ public class Insightly{
 
     public JSONArray getOpportunities(Map<String, Object> options) throws IOException{
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Opportunities");
-        buildODataQuery(request, options);
-        return request.asJSONArray();
+        return buildODataQuery(request, options).asJSONArray();
     }
 
     public JSONObject getOpportunity(long id) throws IOException{
@@ -483,8 +473,7 @@ public class Insightly{
 
     public JSONArray getOrganizations(Map<String, Object> options) throws IOException{
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Organisations");
-        buildODataQuery(request, options);
-        return request.asJSONArray();
+        return buildODataQuery(request, options).asJSONArray();
     }
 
     public JSONObject getOrganization(long id) throws IOException{
@@ -543,12 +532,7 @@ public class Insightly{
 
     public JSONArray getProjects(Map<String, Object> options) throws IOException{
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Projects");
-
-        if(options != null){
-            buildODataQuery(request, options);
-        }
-
-        return request.asJSONArray();
+        return buildODataQuery(request, options).asJSONArray();
     }
 
     public JSONObject getProject(long id) throws IOException{
@@ -814,8 +798,25 @@ public class Insightly{
             contact = contacts.getJSONObject(0);
             System.out.println("PASS: getContacts(), found " + contacts.length() + " contacts.");
             passed += 1;
+        } catch (Exception e) {
+            System.out.println("FAIL: getContacts()");
+            failed += 1;
         }
-        catch(Exception e){
+
+        try {
+            JSONArray contacts;
+            options = new HashMap<String, Object>();
+            final int numOfContacts = 1;
+            options.put("top", numOfContacts);
+            contacts = this.getContacts(options);
+            contact = contacts.getJSONObject(0);
+            System.out.println("PASS: getContacts(), found " + contacts.length() + " contacts.");
+            if (numOfContacts == contacts.length()) {
+                passed += 1;
+            } else {
+                failed += 1;
+            }
+        } catch (Exception e) {
             System.out.println("FAIL: getContacts()");
             failed += 1;
         }
