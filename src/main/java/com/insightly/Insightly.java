@@ -176,37 +176,6 @@ public class Insightly {
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    private InsightlyRequest buildContactQuery(Map<String, Object> options, InsightlyRequest request) {
-        if (options == null) {
-            return request;
-        }
-        if (options.containsKey("email") && (options.get("email") != null)) {
-            String email = (String) options.get("email");
-            request.queryParam("email", email);
-        }
-        if (options.containsKey("tag") && (options.get("tag") != null)) {
-            String tag = (String) options.get("tag");
-            request.queryParam("tag", tag);
-        }
-        if (options.containsKey("ids") && (options.get("ids") != null)) {
-            if (options.get("ids") instanceof String) {
-                request.queryParam("ids", (String) options.get("ids"));
-            } else if (options.get("ids") instanceof List) {
-                List<Long> ids = (List<Long>) options.get("ids");
-                if (ids.size() > 0) {
-                    StringBuilder acc = new StringBuilder();
-                    for (Long id : ids) {
-                        acc.append(id);
-                        acc.append(",");
-                    }
-
-                    request.queryParam("ids", acc.toString());
-                }
-            }
-        }
-        return request;
-    }
-
     public JSONObject getContact(long id) throws IOException {
         return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + id).asJSONObject();
     }
@@ -396,14 +365,12 @@ public class Insightly {
 
     public JSONObject addOpportunityCategory(JSONObject category) throws IOException {
         String url_path = "/v2.1/OpportunityCategories";
-        InsightlyRequest request = null;
-
+        InsightlyRequest request;
         if (category.has("OPPORTUNITY_ID") && (category.getLong("OPPORTUNITY_ID") > 0)) {
             request = InsightlyRequest.PUT(apikey, url_path);
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(category).asJSONObject();
     }
 
@@ -437,6 +404,7 @@ public class Insightly {
 
     public JSONArray getOrganizations(Map<String, Object> options) throws IOException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Organisations");
+        buildOrganizationQuery(options, request);
         return buildODataQuery(request, options).asJSONArray();
     }
 
@@ -662,28 +630,72 @@ public class Insightly {
         return InsightlyRequest.GET(apikey, "/v2.1/Users/" + id).asJSONObject();
     }
 
+    private InsightlyRequest buildContactQuery(Map<String, Object> options, InsightlyRequest request) {
+        if (options == null) {
+            return request;
+        }
+        if (hasNotNullValue(options, "email")) {
+            String email = (String) options.get("email");
+            request.queryParam("email", email);
+        }
+        addTagParameter(options, request);
+        addIDsParameter(options, request);
+        return request;
+    }
+
+    private InsightlyRequest buildOrganizationQuery(Map<String, Object> options, InsightlyRequest request) {
+        if (options == null) {
+            return request;
+        }
+        if (hasNotNullValue(options, "domain")) {
+            String domain = (String) options.get("domain");
+            request.queryParam("domain", domain);
+        }
+        addTagParameter(options, request);
+        addIDsParameter(options, request);
+        return request;
+    }
+
+    private void addIDsParameter(Map<String, Object> options, InsightlyRequest request) {
+        if (hasNotNullValue(options, "ids")) {
+            if (options.get("ids") instanceof String) {
+                request.queryParam("ids", (String) options.get("ids"));
+            } else if (options.get("ids") instanceof List) {
+                List<Long> ids = (List<Long>) options.get("ids");
+                if (ids.size() > 0) {
+                    StringBuilder acc = new StringBuilder();
+                    for (Long id : ids) {
+                        acc.append(id);
+                        acc.append(",");
+                    }
+
+                    request.queryParam("ids", acc.toString());
+                }
+            }
+        }
+    }
+
     private InsightlyRequest buildODataQuery(InsightlyRequest request, Map<String, Object> options) {
         if (options == null) {
             return request;
         }
-
-        if (options.containsKey("top") && (options.get("top") != null)) {
+        if (hasNotNullValue(options, "top")) {
             long top = ((Number) options.get("top")).longValue();
             if (top > 0) {
                 request.top(top);
             }
         }
-        if (options.containsKey("skip") && (options.get("skip") != null)) {
+        if (hasNotNullValue(options, "skip")) {
             long skip = ((Number) options.get("skip")).longValue();
             if (skip > 0) {
                 request.skip(skip);
             }
         }
-        if (options.containsKey("orderby") && (options.get("orderby") != null)) {
+        if (hasNotNullValue(options, "orderby")) {
             String orderby = (String) options.get("orderby");
             request.orderBy(orderby);
         }
-        if (options.containsKey("filters") && (options.get("filters") != null)) {
+        if (hasNotNullValue(options, "filters")) {
             StringBuilder filters = new StringBuilder();
             if (options.get("filters") instanceof List) {
                 List<String> listOfFilter = (List<String>) options.get("filters");
@@ -700,6 +712,17 @@ public class Insightly {
         }
 
         return request;
+    }
+
+    private void addTagParameter(Map<String, Object> options, InsightlyRequest request) {
+        if (hasNotNullValue(options, "tag")) {
+            String tag = (String) options.get("tag");
+            request.queryParam("tag", tag);
+        }
+    }
+
+    private boolean hasNotNullValue(Map<String, Object> options, final String keyValue) {
+        return options.containsKey(keyValue) && (options.get(keyValue) != null);
     }
 
     /**
