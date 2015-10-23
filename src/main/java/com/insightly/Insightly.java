@@ -2,13 +2,11 @@ package com.insightly;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.Iterator;
 
 /**
  * <p>
@@ -251,7 +249,6 @@ public class Insightly {
     public JSONObject addEvent(JSONObject event) throws IOException {
         InsightlyRequest request = null;
         if (event.has("EVENT_ID") && (event.getLong("EVENT_ID") > 0)) {
-            long event_id = event.getLong("EVENT_ID");
             request = InsightlyRequest.PUT(apikey, "/v2.1/Events");
         } else {
             request = InsightlyRequest.POST(apikey, "/v2.1/Events");
@@ -285,6 +282,43 @@ public class Insightly {
 
     public void deleteFileCategory(long id) throws IOException {
         InsightlyRequest.DELETE(apikey, "/v2.1/FileCategories/" + id);
+    }
+
+    public JSONArray getLeads(Map<String, Object> options) throws IOException {
+        InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Leads");
+        buildLeadsQuery(options, request);
+        return buildODataQuery(request, options).asJSONArray();
+    }
+
+    public JSONObject getLead(long id) throws IOException {
+        return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + id).asJSONObject();
+    }
+
+    public JSONObject addLead(JSONObject lead) throws IOException {
+        String url_path = "/v2.1/Leads";
+        InsightlyRequest request = null;
+        if (lead.has("LEAD_ID") && (lead.getLong("LEAD_ID") > 0)) {
+            request = InsightlyRequest.PUT(apikey, url_path);
+        } else {
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+        return request.body(lead).asJSONObject();
+    }
+
+    public void deleteLead(long id) throws IOException {
+        InsightlyRequest.DELETE(apikey, "/v2.1/Leads/" + id).asString();
+    }
+
+    public JSONArray getLeadEmails(long lead_id) throws IOException {
+        return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + lead_id + "/Emails").asJSONArray();
+    }
+
+    public JSONArray getLeadNotes(long lead_id) throws IOException {
+        return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + lead_id + "/Notes").asJSONArray();
+    }
+
+    public JSONArray getLeadTasks(long lead_id) throws IOException {
+        return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + lead_id + "/Tasks").asJSONArray();
     }
 
     public JSONArray getNotes() throws IOException {
@@ -634,10 +668,21 @@ public class Insightly {
         if (options == null) {
             return request;
         }
-        if (hasNotNullValue(options, "email")) {
-            String email = (String) options.get("email");
-            request.queryParam("email", email);
+        addEmailParameter(options, request);
+        addTagParameter(options, request);
+        addIDsParameter(options, request);
+        return request;
+    }
+
+    private InsightlyRequest buildLeadsQuery(Map<String, Object> options, InsightlyRequest request) {
+        if (options == null) {
+            return request;
         }
+        if (hasNotNullValue(options, "domain")) {
+            String includeConverted = (String) options.get("includeConverted");
+            request.queryParam("includeConverted", includeConverted);
+        }
+        addEmailParameter(options, request);
         addTagParameter(options, request);
         addIDsParameter(options, request);
         return request;
@@ -647,10 +692,7 @@ public class Insightly {
         if (options == null) {
             return request;
         }
-        if (hasNotNullValue(options, "domain")) {
-            String domain = (String) options.get("domain");
-            request.queryParam("domain", domain);
-        }
+        addStringParameter(options, "domain", request);
         addTagParameter(options, request);
         addIDsParameter(options, request);
         return request;
@@ -668,7 +710,6 @@ public class Insightly {
                         acc.append(id);
                         acc.append(",");
                     }
-
                     request.queryParam("ids", acc.toString());
                 }
             }
@@ -714,10 +755,18 @@ public class Insightly {
         return request;
     }
 
+    private void addEmailParameter(Map<String, Object> options, InsightlyRequest request) {
+        addStringParameter(options, "email", request);
+    }
+
     private void addTagParameter(Map<String, Object> options, InsightlyRequest request) {
-        if (hasNotNullValue(options, "tag")) {
-            String tag = (String) options.get("tag");
-            request.queryParam("tag", tag);
+        addStringParameter(options, "tag", request);
+    }
+
+    private void addStringParameter(Map<String, Object> options, final String paramValue, InsightlyRequest request) {
+        if (hasNotNullValue(options, paramValue)) {
+            String tag = (String) options.get(paramValue);
+            request.queryParam(paramValue, tag);
         }
     }
 
