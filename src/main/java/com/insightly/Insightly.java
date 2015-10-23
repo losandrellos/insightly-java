@@ -600,8 +600,16 @@ public class Insightly {
     }
 
     public JSONObject addTaskComment(long task_id, JSONObject comment) throws IOException {
-        // Not implemented yet.
-        return null;
+        String url_path = "/v2.1/Tasks/" + task_id + "/Comments";
+        InsightlyRequest request = null;
+
+        if (comment.has("COMMENT_ID") && (comment.getLong("COMMENT_ID") > 0)) {
+            request = InsightlyRequest.PUT(apikey, url_path);
+        } else {
+            request = InsightlyRequest.POST(apikey, url_path);
+        }
+
+        return request.body(comment).asJSONObject();
     }
 
     public JSONArray getTeams() throws IOException {
