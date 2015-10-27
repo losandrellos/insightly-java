@@ -686,7 +686,7 @@ public class Insightly {
         if (options == null) {
             return request;
         }
-        if (hasNotNullValue(options, "domain")) {
+        if (hasNotNullValue(options, "includeConverted")) {
             String includeConverted = (String) options.get("includeConverted");
             request.queryParam("includeConverted", includeConverted);
         }
