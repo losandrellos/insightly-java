@@ -1,87 +1,87 @@
 package com.insightly;
 
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * <p>
  * Insightly Java library for Insightly API This library provides user friendly access to the version 2.1 REST API for Insightly.
  * </p>
- *
+ * <p>
  * <p>
  * The library is implemented as a standard Maven project, so all dependencies can be automatically resolved. The methods return appropriate JSON objects from org.json, so that
  * objects are described in an agnostic manner.
  * </p>
- *
+ * <p>
  * <h1>USAGE:</h1>
- *
+ * <p>
  * <p>
  * Simply include the library as a dependency in your Maven project. See the project README for more information.
  * </p>
- *
+ * <p>
  * <p>
  * This class also includes a test() function that you can use to perform a simple connectivity and sanity check of the library to ensure that the library is functioning on your
  * system). To use it, simply create an Insightly object and invoke the {@link #test()} method:
  * </p>
- *
+ * <p>
  * <pre>
  * {@code
  * Insightly i = new Insightly(<your-api-key>);
  * i.test();
  * }
  * </pre>
- *
+ * <p>
  * <p>
  * For your convenience, this class includes a {@link #main(String[]) main} function that does exactly that. You can run execute this using Maven via the following command:
  * </p>
- *
+ * <p>
  * {@code
  * mvn exec:java -Dexec.mainClass="com.insightly.Insightly" -Dexec.args="<your-api-key>"
  * }
- *
+ * <p>
  * <p>
  * This will run an automatic test suite against your Insightly account. If the methods you need all pass, you're good to go!
  * </p>
- *
+ * <p>
  * <p>
  * If you are working with very large recordsets, you should use ODATA filters to access data in smaller chunks. This is a good idea in general to minimize server response times.
  * </p>
- *
+ * <p>
  * <h1>BASIC USE PATTERNS:</h1>
- *
+ * <p>
  * <h2>CREATE/UPDATE ACTIONS</h2>
- *
+ * <p>
  * <p>
  * These methods expect a {@link org.json.JSONObject} containing valid data fields for the object. They will return a {@link org.json.JSONObject} containing the object as stored on
  * the server (if successful) or throw an exception if the create/update request fails. You indicate whether you want to create a new item by setting the record id to 0 or omitting
  * it.
  * </p>
- *
+ * <p>
  * <h2>SEARCH ACTIONS</h2>
- *
+ * <p>
  * <p>
  * These methods return a {@link org.json.JSONArray} containing the matching items. For example to request a list of all contacts, you call:
  * </p>
- *
+ * <p>
  * <pre>
  * {@code
  * Insightly i = Insightly("your API key");
  * JSONArray contacts = i.getContacts();
  * }
  * </pre>
- *
+ * <p>
  * <h2>SEARCH ACTIONS USING ODATA</h2>
- *
+ * <p>
  * <p>
  * Search methods recognize top, skip, orderby and filters parameters, which you can use to page, order and filter recordsets. These are passed to the method via a
  * {@code Map<String, Object>} object.
  * </p>
- *
+ * <p>
  * <pre>
  * {@code
  * Map<String, Object> options = new HashMap<String, Object>();
@@ -105,41 +105,41 @@ import org.json.JSONObject;
  * contacts = i.getContacts(options); // get contacts where FIRST_NAME='Brian'
  * }
  * </pre>
- *
+ * <p>
  * <p>
  * <strong>IMPORTANT NOTE:</strong> when using OData filters, be sure to include escaped quotes around the search term, otherwise you will get a 400 (bad request) error
  * </p>
- *
+ * <p>
  * <p>
  * These methods will raise an exception if the lookup fails, or return a list of dictionaries if successful, or an empty list if no records were found.
  * </p>
- *
+ * <p>
  * <h2>READ ACTIONS (SINGLE ITEM)</h2>
- *
+ * <p>
  * <p>
  * These methods will return a single dictionary containing the requested item's details. e.g. {@code contact = i.getContact(123456)}
  * </p>
- *
+ * <p>
  * <h2>DELETE ACTIONS</h2>
- *
+ * <p>
  * <p>
  * These methods will return if successful, or raise an exception. e.g. {@code i.deleteContact(123456)}
  * </p>
- *
+ * <p>
  * <h2>IMAGE AND FILE ATTACHMENT MANAGEMENT</h2>
- *
+ * <p>
  * <p>
  * The API calls to manage images and file attachments have not yet been implemented in the Java library. However you can access these directly via our REST API
  * </p>
- *
+ * <p>
  * <h2>ISSUES TO BE AWARE OF</h2>
- *
+ * <p>
  * <p>
  * This library makes it easy to integrate with Insightly, and by automating HTTPS requests for you, eliminates the most common causes of user issues. That said, the library is
  * picky about rejecting requests that do not have required fields, or have invalid field values (such as an invalid USER_ID). When this happens, you'll get a 400 (bad request)
  * error. Your best bet at this point is to consult the API documentation and look at the required request data.
  * </p>
- *
+ * <p>
  * <p>
  * If you are working with large recordsets, we strongly recommend that you use ODATA functions, such as top and skip to page through recordsets rather than trying to fetch entire
  * recordsets in one go. This both improves client/server communication, but also minimizes memory requirements on your end.
@@ -151,7 +151,7 @@ public class Insightly {
         this.apikey = apikey;
     }
 
-    public JSONObject addContact(JSONObject contact) throws IOException {
+    public JSONObject addContact(JSONObject contact) throws InsightlyException {
         String url_path = "/v2.1/Contacts";
         InsightlyRequest request = null;
 
@@ -160,141 +160,141 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(contact).asJSONObject();
     }
 
-    public void deleteContact(long contact_id) throws IOException {
+    public void deleteContact(long contact_id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Contacts/" + contact_id).asString();
     }
 
-    public JSONArray getContacts(Map<String, Object> options) throws IOException {
+    public JSONArray getContacts(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Contacts");
         buildContactQuery(options, request);
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getContact(long id) throws IOException {
+    public JSONObject getContact(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + id).asJSONObject();
     }
 
-    public JSONArray getContactEmails(long contact_id) throws IOException {
+    public JSONArray getContactEmails(long contact_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + contact_id + "/Emails").asJSONArray();
     }
 
-    public JSONArray getContactNotes(long contact_id) throws IOException {
+    public JSONArray getContactNotes(long contact_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + contact_id + "/Notes").asJSONArray();
     }
 
-    public JSONArray getContactTasks(long contact_id) throws IOException {
+    public JSONArray getContactTasks(long contact_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Contacts/" + contact_id + "/Tasks").asJSONArray();
     }
 
-    public JSONArray getCountries() throws IOException {
+    public JSONArray getCountries() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Countries").asJSONArray();
     }
 
-    public JSONArray getCurrencies() throws IOException {
+    public JSONArray getCurrencies() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Currencies").asJSONArray();
     }
 
-    public JSONArray getCustomFields() throws IOException {
+    public JSONArray getCustomFields() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/CustomFields").asJSONArray();
     }
 
-    public JSONObject getCustomField(long id) throws IOException {
+    public JSONObject getCustomField(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/CustomFields/" + id).asJSONObject();
     }
 
-    public JSONArray getEmails(Map<String, Object> options) throws IOException {
+    public JSONArray getEmails(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Emails");
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getEmail(long id) throws IOException {
+    public JSONObject getEmail(long id) throws InsightlyException {
+
         return InsightlyRequest.GET(apikey, "/v2.1/Emails/" + id).asJSONObject();
+
     }
 
-    public void deleteEmail(long id) throws IOException {
+    public void deleteEmail(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Emails/" + id).asString();
     }
 
-    public JSONArray getEmailComments(long email_id) throws IOException {
+    public JSONArray getEmailComments(long email_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Emails/" + email_id + "/Comments").asJSONArray();
     }
 
-    public JSONObject addCommentToEmail(long email_id, String body, long owner_user_id) throws IOException {
+    public JSONObject addCommentToEmail(long email_id, String body, long owner_user_id) throws InsightlyException {
         JSONObject data = new JSONObject();
         data.put("BODY", body);
         data.put("OWNER_USER_ID", owner_user_id);
+
 
         return InsightlyRequest.POST(apikey, "/v2.1/Emails/" + email_id + "/Comments")
                 .body(data)
                 .asJSONObject();
     }
 
-    public JSONObject getEvent(long id) throws IOException {
+    public JSONObject getEvent(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Events/" + id).asJSONObject();
     }
 
-    public JSONArray getEvents() throws IOException {
+    public JSONArray getEvents() throws InsightlyException {
         return getEvents(null);
     }
 
-    public JSONArray getEvents(Map<String, Object> options) throws IOException {
+    public JSONArray getEvents(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Events");
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject addEvent(JSONObject event) throws IOException {
+    public JSONObject addEvent(JSONObject event) throws InsightlyException {
         InsightlyRequest request = null;
         if (event.has("EVENT_ID") && (event.getLong("EVENT_ID") > 0)) {
             request = InsightlyRequest.PUT(apikey, "/v2.1/Events");
         } else {
             request = InsightlyRequest.POST(apikey, "/v2.1/Events");
         }
-
         return request.body(event).asJSONObject();
     }
 
-    public void deleteEvent(long id) throws IOException {
+    public void deleteEvent(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Events/" + id).asString();
     }
 
-    public JSONArray getFileCategories() throws IOException {
+    public JSONArray getFileCategories() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/FileCategories").asJSONArray();
     }
 
-    public JSONObject getFileCategory(long id) throws IOException {
+    public JSONObject getFileCategory(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/FileCategories/" + id).asJSONObject();
     }
 
-    public JSONObject addFileCategory(JSONObject category) throws IOException {
+    public JSONObject addFileCategory(JSONObject category) throws InsightlyException {
         InsightlyRequest request = null;
         if (category.has("CATEGORY_ID") && (category.getLong("CATEGORY_ID") > 0)) {
             request = InsightlyRequest.PUT(apikey, "/v2.1/FileCategories");
         } else {
             request = InsightlyRequest.POST(apikey, "/v2.1/FileCategories");
         }
-
         return request.body(category).asJSONObject();
     }
 
-    public void deleteFileCategory(long id) throws IOException {
+    public void deleteFileCategory(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/FileCategories/" + id);
     }
 
-    public JSONArray getLeads(Map<String, Object> options) throws IOException {
+    public JSONArray getLeads(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Leads");
         buildLeadsQuery(options, request);
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getLead(long id) throws IOException {
+    public JSONObject getLead(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + id).asJSONObject();
     }
 
-    public JSONObject addLead(JSONObject lead) throws IOException {
+    public JSONObject addLead(JSONObject lead) throws InsightlyException {
         String url_path = "/v2.1/Leads";
         InsightlyRequest request = null;
         if (lead.has("LEAD_ID") && (lead.getLong("LEAD_ID") > 0)) {
@@ -305,36 +305,36 @@ public class Insightly {
         return request.body(lead).asJSONObject();
     }
 
-    public void deleteLead(long id) throws IOException {
+    public void deleteLead(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Leads/" + id).asString();
     }
 
-    public JSONArray getLeadEmails(long lead_id) throws IOException {
+    public JSONArray getLeadEmails(long lead_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + lead_id + "/Emails").asJSONArray();
     }
 
-    public JSONArray getLeadNotes(long lead_id) throws IOException {
+    public JSONArray getLeadNotes(long lead_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + lead_id + "/Notes").asJSONArray();
     }
 
-    public JSONArray getLeadTasks(long lead_id) throws IOException {
+    public JSONArray getLeadTasks(long lead_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Leads/" + lead_id + "/Tasks").asJSONArray();
     }
 
-    public JSONArray getNotes() throws IOException {
+    public JSONArray getNotes() throws InsightlyException {
         return this.getNotes(null);
     }
 
-    public JSONArray getNotes(Map<String, Object> options) throws IOException {
+    public JSONArray getNotes(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Notes");
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getNote(long id) throws IOException {
+    public JSONObject getNote(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Notes/" + id).asJSONObject();
     }
 
-    public JSONObject addNote(JSONObject note) throws IOException {
+    public JSONObject addNote(JSONObject note) throws InsightlyException {
         InsightlyRequest request = null;
 
         if (note.has("NOTE_ID") && (note.getLong("NOTE_ID") > 0)) {
@@ -342,37 +342,36 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, "/v2.1/Notes");
         }
-
         return request.body(note).asJSONObject();
     }
 
-    public JSONArray getNoteComments(long note_id) throws IOException {
+    public JSONArray getNoteComments(long note_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Notes/" + note_id + "/Comments").asJSONArray();
     }
 
-    public JSONObject addNoteComment(long note_id, JSONObject comment) throws IOException {
+    public JSONObject addNoteComment(long note_id, JSONObject comment) throws InsightlyException {
         String url_path = "/v2.1/Notes/" + note_id + "/Comments";
         return InsightlyRequest.POST(apikey, url_path).body(comment).asJSONObject();
     }
 
-    public JSONArray getOpportunities() throws IOException {
+    public JSONArray getOpportunities() throws InsightlyException {
         return this.getOpportunities(null);
     }
 
-    public JSONArray getOpportunities(Map<String, Object> options) throws IOException {
+    public JSONArray getOpportunities(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Opportunities");
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getOpportunity(long id) throws IOException {
+    public JSONObject getOpportunity(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + id).asJSONObject();
     }
 
-    public void deleteNote(long id) throws IOException {
+    public void deleteNote(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Notes/" + id).asString();
     }
 
-    public JSONObject addOpportunity(JSONObject opportunity) throws IOException {
+    public JSONObject addOpportunity(JSONObject opportunity) throws InsightlyException {
         String url_path = "/v2.1/Opportunities";
         InsightlyRequest request = null;
 
@@ -381,23 +380,22 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(opportunity).asJSONObject();
     }
 
-    public void deleteOpportunity(long id) throws IOException {
+    public void deleteOpportunity(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Opportunities/" + id).asString();
     }
 
-    public JSONArray getOpportunityCategories() throws IOException {
+    public JSONArray getOpportunityCategories() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/OpportunityCategories").asJSONArray();
     }
 
-    public JSONObject getOpportunityCategory(long id) throws IOException {
+    public JSONObject getOpportunityCategory(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/OpportunityCategries/" + id).asJSONObject();
     }
 
-    public JSONObject addOpportunityCategory(JSONObject category) throws IOException {
+    public JSONObject addOpportunityCategory(JSONObject category) throws InsightlyException {
         String url_path = "/v2.1/OpportunityCategories";
         InsightlyRequest request;
         if (category.has("OPPORTUNITY_ID") && (category.getLong("OPPORTUNITY_ID") > 0)) {
@@ -408,45 +406,45 @@ public class Insightly {
         return request.body(category).asJSONObject();
     }
 
-    public void deleteOpportunityCategory(long id) throws IOException {
+    public void deleteOpportunityCategory(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/OpportunityCategories/" + id).asString();
     }
 
-    public JSONArray getOpportunityEmails(long opportunity_id) throws IOException {
+    public JSONArray getOpportunityEmails(long opportunity_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/Emails").asJSONArray();
     }
 
-    public JSONArray getOpportunityNotes(long opportunity_id) throws IOException {
+    public JSONArray getOpportunityNotes(long opportunity_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/Notes").asJSONArray();
     }
 
-    public JSONArray getOpportunityStateHistory(long opportunity_id) throws IOException {
+    public JSONArray getOpportunityStateHistory(long opportunity_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/StateHistory").asJSONArray();
     }
 
-    public JSONArray getOpportunityStateReasons() throws IOException {
+    public JSONArray getOpportunityStateReasons() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/OpportunityStateReasons").asJSONArray();
     }
 
-    public JSONArray getOpportunityTasks(long opportunity_id) throws IOException {
+    public JSONArray getOpportunityTasks(long opportunity_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Opportunities/" + opportunity_id + "/Tasks").asJSONArray();
     }
 
-    public JSONArray getOrganizations() throws IOException {
+    public JSONArray getOrganizations() throws InsightlyException {
         return this.getOrganizations(null);
     }
 
-    public JSONArray getOrganizations(Map<String, Object> options) throws IOException {
+    public JSONArray getOrganizations(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Organisations");
         buildOrganizationQuery(options, request);
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getOrganization(long id) throws IOException {
+    public JSONObject getOrganization(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + id).asJSONObject();
     }
 
-    public JSONObject addOrganization(JSONObject organization) throws IOException {
+    public JSONObject addOrganization(JSONObject organization) throws InsightlyException {
         String url_path = "/v2.1/Organisations";
         InsightlyRequest request = null;
 
@@ -455,56 +453,59 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(organization).asJSONObject();
     }
 
-    public void deleteOrganization(long id) throws IOException {
+    public void deleteOrganization(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Organisations/" + id).asString();
     }
 
-    public JSONArray getOrganizationEmails(long organization_id) throws IOException {
+    public JSONArray getOrganizationEmails(long organization_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + organization_id + "/Emails").asJSONArray();
     }
 
-    public JSONArray getOrganizationNotes(long organization_id) throws IOException {
+    public JSONArray getOrganizationNotes(long organization_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + organization_id + "/Notes").asJSONArray();
     }
 
-    public JSONArray getOrganizationTasks(long organization_id) throws IOException {
+    public JSONArray getOrganizationTasks(long organization_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Organisations/" + organization_id + "/Tasks").asJSONArray();
     }
 
-    public JSONArray getPipelines() throws IOException {
+    public JSONArray getPipelines() throws InsightlyException {
+
         return InsightlyRequest.GET(apikey, "/v2.1/Pipelines").asJSONArray();
+
     }
 
-    public JSONObject getPipeline(long id) throws IOException {
+    public JSONObject getPipeline(long id) throws InsightlyException {
+
         return InsightlyRequest.GET(apikey, "/v2.1/Pipelines/" + id).asJSONObject();
+
     }
 
-    public JSONArray getPipelineStages() throws IOException {
+    public JSONArray getPipelineStages() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/PipelineStages").asJSONArray();
     }
 
-    public JSONObject getPipelineStage(long id) throws IOException {
+    public JSONObject getPipelineStage(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/PipelineStages/" + id).asJSONObject();
     }
 
-    public JSONArray getProjects() throws IOException {
+    public JSONArray getProjects() throws InsightlyException {
         return this.getProjects(null);
     }
 
-    public JSONArray getProjects(Map<String, Object> options) throws IOException {
+    public JSONArray getProjects(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Projects");
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getProject(long id) throws IOException {
+    public JSONObject getProject(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + id).asJSONObject();
     }
 
-    public JSONObject addProject(JSONObject project) throws IOException {
+    public JSONObject addProject(JSONObject project) throws InsightlyException {
         String url_path = "/v2.1/Projects";
         InsightlyRequest request = null;
 
@@ -513,35 +514,34 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(project).asJSONObject();
     }
 
-    public void deleteProject(long id) throws IOException {
+    public void deleteProject(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Projects/" + id).asString();
     }
 
-    public JSONArray getProjectEmails(long project_id) throws IOException {
+    public JSONArray getProjectEmails(long project_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + project_id + "/Emails").asJSONArray();
     }
 
-    public JSONArray getProjectNotes(long project_id) throws IOException {
+    public JSONArray getProjectNotes(long project_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + project_id + "/Notes").asJSONArray();
     }
 
-    public JSONArray getProjectTasks(long project_id) throws IOException {
+    public JSONArray getProjectTasks(long project_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Projects/" + project_id + "/Tasks").asJSONArray();
     }
 
-    public JSONArray getProjectCategories() throws IOException {
+    public JSONArray getProjectCategories() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/ProjectCategories").asJSONArray();
     }
 
-    public JSONObject getProjectCategory(long id) throws IOException {
+    public JSONObject getProjectCategory(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/ProjectCategories/" + id).asJSONObject();
     }
 
-    public JSONObject addProjectCategory(JSONObject category) throws IOException {
+    public JSONObject addProjectCategory(JSONObject category) throws InsightlyException {
         String url_path = "/v2.1/ProjectCategories";
         InsightlyRequest request = null;
         if (category.has("CATEGORY_ID") && (category.getLong("CATEGORY_ID") > 0)) {
@@ -549,36 +549,35 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(category).asJSONObject();
     }
 
-    public void deleteProjectCategory(long id) throws IOException {
+    public void deleteProjectCategory(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/ProjectCategories/" + id).asString();
     }
 
-    public JSONArray getRelationships() throws IOException {
+    public JSONArray getRelationships() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Relationships").asJSONArray();
     }
 
-    public JSONArray getTags(long id) throws IOException {
+    public JSONArray getTags(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Tags/" + id).asJSONArray();
     }
 
-    public JSONArray getTasks() throws IOException {
+    public JSONArray getTasks() throws InsightlyException {
         return this.getTasks(null);
     }
 
-    public JSONArray getTasks(Map<String, Object> options) throws IOException {
+    public JSONArray getTasks(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Tasks");
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getTask(long id) throws IOException {
+    public JSONObject getTask(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Tasks/" + id).asJSONObject();
     }
 
-    public JSONObject addTask(JSONObject task) throws IOException {
+    public JSONObject addTask(JSONObject task) throws InsightlyException {
         String url_path = "/v2.1/Tasks";
         InsightlyRequest request = null;
 
@@ -587,19 +586,18 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(task).asJSONObject();
     }
 
-    public void deleteTask(long id) throws IOException {
+    public void deleteTask(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Tasks/" + id).asString();
     }
 
-    public JSONArray getTaskComments(long task_id) throws IOException {
+    public JSONArray getTaskComments(long task_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Tasks/" + task_id + "/Comments").asJSONArray();
     }
 
-    public JSONObject addTaskComment(long task_id, JSONObject comment) throws IOException {
+    public JSONObject addTaskComment(long task_id, JSONObject comment) throws InsightlyException {
         String url_path = "/v2.1/Tasks/" + task_id + "/Comments";
         InsightlyRequest request = null;
 
@@ -608,24 +606,23 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(comment).asJSONObject();
     }
 
-    public JSONArray getTeams() throws IOException {
+    public JSONArray getTeams() throws InsightlyException {
         return this.getTeams(null);
     }
 
-    public JSONArray getTeams(Map<String, Object> options) throws IOException {
+    public JSONArray getTeams(Map<String, Object> options) throws InsightlyException {
         InsightlyRequest request = InsightlyRequest.GET(apikey, "/v2.1/Teams");
         return buildODataQuery(request, options).asJSONArray();
     }
 
-    public JSONObject getTeam(long id) throws IOException {
+    public JSONObject getTeam(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Teams/" + id).asJSONObject();
     }
 
-    public JSONObject addTeam(JSONObject team) throws IOException {
+    public JSONObject addTeam(JSONObject team) throws InsightlyException {
         String url_path = "/v2.1/Teams";
         InsightlyRequest request = null;
 
@@ -634,41 +631,41 @@ public class Insightly {
         } else {
             request = InsightlyRequest.POST(apikey, url_path);
         }
-
         return request.body(team).asJSONObject();
     }
 
-    public void deleteTeam(long id) throws IOException {
+    public void deleteTeam(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/Teams/" + id).asString();
     }
 
-    public JSONArray getTeamMembers(long team_id) throws IOException {
+    public JSONArray getTeamMembers(long team_id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/TeamMembers")
                 .queryParam("teamid", team_id)
                 .asJSONArray();
+
     }
 
-    public JSONObject getTeamMember(long id) throws IOException {
+    public JSONObject getTeamMember(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/TeamMembers/" + id).asJSONObject();
     }
 
-    public JSONObject addTeamMember(JSONObject team_member) throws IOException {
+    public JSONObject addTeamMember(JSONObject team_member) throws InsightlyException {
         return InsightlyRequest.POST(apikey, "/v2.1/TeamMembers").body(team_member).asJSONObject();
     }
 
-    public void deleteTeamMember(long id) throws IOException {
+    public void deleteTeamMember(long id) throws InsightlyException {
         InsightlyRequest.DELETE(apikey, "/v2.1/TeamMembers/" + id).asString();
     }
 
-    public JSONObject updateTeamMember(JSONObject team_member) throws IOException {
+    public JSONObject updateTeamMember(JSONObject team_member) throws InsightlyException {
         return InsightlyRequest.PUT(apikey, "/v2.1/TeamMembers").body(team_member).asJSONObject();
     }
 
-    public JSONArray getUsers() throws IOException {
+    public JSONArray getUsers() throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Users").asJSONArray();
     }
 
-    public JSONObject getUser(long id) throws IOException {
+    public JSONObject getUser(long id) throws InsightlyException {
         return InsightlyRequest.GET(apikey, "/v2.1/Users/" + id).asJSONObject();
     }
 
@@ -748,7 +745,7 @@ public class Insightly {
             StringBuilder filters = new StringBuilder();
             if (options.get("filters") instanceof List) {
                 List<String> listOfFilter = (List<String>) options.get("filters");
-                for (Iterator<String> iterator = listOfFilter.iterator(); iterator.hasNext();) {
+                for (Iterator<String> iterator = listOfFilter.iterator(); iterator.hasNext(); ) {
                     filters.append(iterator.next());
                     if (iterator.hasNext()) {
                         filters.append(" and ");
@@ -1082,7 +1079,7 @@ public class Insightly {
             JSONArray categories = this.getOpportunityCategories();
             System.out.println("PASS: getOpportunityCategories(), found " + categories.length() + " categories.");
             passed += 1;
-        } catch (IOException ex) {
+        } catch (InsightlyException ex) {
             System.out.println("FAIL: getOpportunityCategories()");
             failed += 1;
         }
@@ -1180,7 +1177,7 @@ public class Insightly {
                     JSONArray emails = this.getOrganizationEmails(organization_id);
                     System.out.println("PASS: getOrganizationEmails(), found " + emails.length() + " emails.");
                     passed += 1;
-                } catch (IOException ex) {
+                } catch (InsightlyException ex) {
                     System.out.println("FAIL: getOrganizationEmails()");
                     failed += 1;
                 }
