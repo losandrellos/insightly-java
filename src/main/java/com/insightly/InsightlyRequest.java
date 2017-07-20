@@ -244,11 +244,11 @@ public class InsightlyRequest {
     }
 
     private <T> HttpResponse<T> verifyResponse(HttpResponse<T> response) throws InsightlyException {
-        int status_code = response.getCode();
+        int status_code = response.getStatus();
         if (!(status_code == 200
                 || status_code == 201
                 || status_code == 202)) {
-            InsightlyException insightlyException = new InsightlyException("Server returned status code " + response.getCode());
+            InsightlyException insightlyException = new InsightlyException("Server returned status code " + response.getStatus());
             insightlyException.setResponse(response);
             throw insightlyException;
         }

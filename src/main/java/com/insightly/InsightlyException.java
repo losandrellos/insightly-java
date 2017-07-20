@@ -31,7 +31,7 @@ public class InsightlyException extends Exception {
 
     public boolean isServerError() {
         return hasResponse() &&
-                (response.getCode() > 499 && response.getCode() < 600);
+                (response.getStatus() > 499 && response.getStatus() < 600);
     }
 
     public boolean isUnreachable() {
